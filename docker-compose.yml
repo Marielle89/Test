@@ -1,0 +1,50 @@
+version: "3.7"
+
+networks:
+  test2:
+    name: test2
+
+services:
+  app:
+    build:
+      args:
+        user: marielle
+        uid: 1000
+      context: ./
+      dockerfile: Dockerfile
+    container_name: test2-app
+    restart: unless-stopped
+    working_dir: /var/www/
+    volumes:
+      - ./:/var/www
+    networks:
+      - test2
+
+  nginx:
+    image: nginx:1.17-alpine
+    container_name: test2-nginx
+    restart: unless-stopped
+    ports:
+      - 8009:80
+    volumes:
+      - ./:/var/www
+      - /home/marielle/docker/nginx:/etc/nginx/conf.d
+    networks:
+      - test2
+
+  db:
+    image: mysql:8.0.22
+    command: --default-authentication-plugin=mysql_native_password
+    container_name: crm-db
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: crm
+      MYSQL_USER: crm
+      MYSQL_PASSWORD: crm
+    volumes:
+      - /home/marielle/docker/mysql:/docker-entrypoint-initdb.d
+    networks:
+      - test2
+    ports:
+      - 3339:3306
+    restart: always
